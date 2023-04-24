@@ -70,6 +70,7 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()
     root_dir = os.path.join(args.raw_dataset_path, args.split_name, 'data')
+    print(root_dir)
     avm = ArgoverseMap()
     afl = ArgoverseForecastingLoader(root_dir)  # simply change to your local path of the data
     start_time = time.time()
