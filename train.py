@@ -252,8 +252,7 @@ class Trainer:
             self.save_model(epoch)
             print("Best minADE c", self.smallest_minade_k, "Best minFDE c", self.smallest_minfde_k)
             wandb.log({"Train minADE c": train_minade_c[0], "Train minADE 10": train_minade_10[0], "Train minADE 5": train_minade_5[0],
-                       "Train minADE 1": train_minade_1[0], "Train minFDE c": train_minade_c[0], "Train minFDE 1": train_minade_1[0],
-                       "Best minADE c": self.smallest_minade_k, "Best minFDE c": self.smallest_minfde_k, "epoch": epoch, "steps": steps})
+                       "Train minADE 1": train_minade_1[0], "Train minFDE c": train_minfde_c[0], "Train minFDE 1": train_minfde_1[0]})
 
     def autobotego_evaluate(self, epoch):
         self.autobot_model.eval()
@@ -275,7 +274,7 @@ class Trainer:
             val_ade_losses = np.concatenate(val_ade_losses)
             val_fde_losses = np.concatenate(val_fde_losses)
             val_mode_probs = np.concatenate(val_mode_probs)
-            val_minade_c = min_xde_K(val_ade_losses, val_mode_probs, K=self.args.num_modes)
+            val_minade_c = min_xde_K(val_ade_losses, val_mode_probs, K=F)
             val_minade_10 = min_xde_K(val_ade_losses, val_mode_probs, K=min(self.args.num_modes, 10))
             val_minade_5 = min_xde_K(val_ade_losses, val_mode_probs, K=5)
             val_minade_1 = min_xde_K(val_ade_losses, val_mode_probs, K=1)
@@ -292,6 +291,9 @@ class Trainer:
 
             print("minADE c:", val_minade_c[0], "minADE_10", val_minade_10[0], "minADE_5", val_minade_5[0],
                   "minFDE c:", val_minfde_c[0], "minFDE_1:", val_minfde_1[0])
+            
+            wandb.log({"Val minADE c": val_minade_c[0], "Val minADE 10": val_minade_10[0], "Val minADE 5": val_minade_5[0],
+                       "Val minADE 1": val_minade_1[0], "Val minFDE c": val_minfde_c[0], "Val minFDE 1": val_minfde_1[0]})
             self.autobot_model.train()
             self.save_model(minade_k=val_minade_c[0], minfde_k=val_minfde_c[0])
 
