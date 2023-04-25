@@ -20,6 +20,9 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.metric_helpers import min_xde_K
 from utils.train_helpers import nll_loss_multimodes, nll_loss_multimodes_joint
 
+import wandb
+wandb.login()
+
 
 class Trainer:
     def __init__(self, args, results_dirname):
@@ -219,6 +222,9 @@ class Trainer:
 
                 steps += 1
 
+                wandb.log({"NLL loss": nll_loss.item(), "KL loss": kl_loss.item(), "Prior Entropy": torch.mean(D.Categorical(mode_probs).entropy()), 
+                           "Post Entropy":post_entropy, "ADE+FDE loss": adefde_loss.item()})
+
             ade_losses = np.concatenate(epoch_ade_losses)
             fde_losses = np.concatenate(epoch_fde_losses)
             mode_probs = np.concatenate(epoch_mode_probs)
@@ -245,6 +251,9 @@ class Trainer:
             self.autobotego_evaluate(epoch)
             self.save_model(epoch)
             print("Best minADE c", self.smallest_minade_k, "Best minFDE c", self.smallest_minfde_k)
+            wandb.log({"Train minADE c": train_minade_c[0], "Train minADE 10": train_minade_10[0], "Train minADE 5": train_minade_5[0],
+                       "Train minADE 1": train_minade_1[0], "Train minFDE c": train_minade_c[0], "Train minFDE 1": train_minade_1[0],
+                       "Best minADE c": self.smallest_minade_k, "Best minFDE c": self.smallest_minfde_k, "epoch": epoch, "steps": steps})
 
     def autobotego_evaluate(self, epoch):
         self.autobot_model.eval()
@@ -457,5 +466,35 @@ class Trainer:
 
 if __name__ == "__main__":
     args, results_dirname = get_train_args()
+    run = wandb.init(
+    # Set the project where this run will be logged
+    project="Autobot",
+    # Track hyperparameters and run metadata
+    config={
+        "learning_rate": args.learning_rate,
+        "seed": args.seed,
+        "disable_cuda": args.disable_cuda,
+        "adam_epsilon": args.adam_epsilon,
+        "dataset": args.dataset,
+        "dataset_path": args.dataset_path, 
+        "use_map_lanes": args.use_map_lanes,
+        "model_type": args.model_type, 
+        "batch_size": args.batch_size, 
+        "hidden_size": args.hidden_size, 
+        "num_modes": args.num_modes, 
+        "num_encoder_layers": args.num_encoder_layers, 
+        "dropout": args.dropout, 
+        "tx_num_heads": args.tx_num_heads, 
+        "num_decoder_layers": args.num_decoder_layers, 
+        "tx_hidden_size": args.tx_hidden_size, 
+        "use_map_image": args.use_map_image,
+        "use_map_lanes": args.use_map_lanes,
+        "num_epochs": args.num_epochs, 
+        "entropy_weight": args.entropy_weight,
+        "kl_weight": args.kl_weight,
+        "use_FDEADE_aux_loss": args.use_FDEADE_aux_loss,
+        "grad_clip_norm": args.grad_clip_norm
+    })
+
     trainer = Trainer(args, results_dirname)
     trainer.train()
