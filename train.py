@@ -274,7 +274,7 @@ class Trainer:
             val_ade_losses = np.concatenate(val_ade_losses)
             val_fde_losses = np.concatenate(val_fde_losses)
             val_mode_probs = np.concatenate(val_mode_probs)
-            val_minade_c = min_xde_K(val_ade_losses, val_mode_probs, K=F)
+            val_minade_c = min_xde_K(val_ade_losses, val_mode_probs, K=self.args.num_modes)
             val_minade_10 = min_xde_K(val_ade_losses, val_mode_probs, K=min(self.args.num_modes, 10))
             val_minade_5 = min_xde_K(val_ade_losses, val_mode_probs, K=5)
             val_minade_1 = min_xde_K(val_ade_losses, val_mode_probs, K=1)
