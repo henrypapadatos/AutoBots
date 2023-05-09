@@ -30,6 +30,8 @@ from utils import Logger, load_pretrain
 from mpi4py import MPI
 import copy
 
+import wandb
+wandb.login()
 
 comm = MPI.COMM_WORLD
 hvd.init()
@@ -182,6 +184,7 @@ def train(epoch, config, train_loader, net, loss, post_process, opt, val_loader=
         #----------new!
         output, node_embeddings = net(data, epoch_in)
         loss_out = loss(output, node_embeddings, data, train=True, ssl_agent=net.ssl_agent)
+        
         # ----------new!
         
         post_out = post_process(output, data)
@@ -261,4 +264,10 @@ def sync(data):
 
 
 if __name__ == "__main__":
+    run = wandb.init(
+    # Set the project where this run will be logged
+    project="Autobot-lane_masking",
+    # Track hyperparameters and run metadata
+    config={
+    })
     main()
