@@ -3,6 +3,9 @@
 # limitations under the License.
 
 import os
+import sys
+# the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
+sys.path.append('~/autobot/AutoBots')
 
 os.umask(0)
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -22,10 +25,18 @@ import torch
 from torch.utils.data import Sampler, DataLoader
 import horovod.torch as hvd
 
+from datasets.argoverse.dataset import ArgoH5Dataset
+from datasets.interaction_dataset.dataset import InteractionDataset
+from datasets.trajnetpp.dataset import TrajNetPPDataset
+from models.autobot_joint import AutoBotJoint
+from process_args import get_train_args
+
+from datasets.nuscenes.dataset import NuscenesH5Dataset
+
 
 from torch.utils.data.distributed import DistributedSampler
 
-from utils import Logger, load_pretrain
+from utilss import Logger, load_pretrain
 
 from mpi4py import MPI
 import copy
@@ -34,8 +45,13 @@ import wandb
 wandb.login()
 
 comm = MPI.COMM_WORLD
+#RDMAV_FORK_SAFE
+print('starting')
+
 hvd.init()
+# print(hvd.local_rank())
 torch.cuda.set_device(hvd.local_rank())
+# torch.cuda.set_device('cuda:1')
 
 root_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, root_path)
@@ -71,6 +87,8 @@ def main():
             opt.opt, named_parameters=net.named_parameters()
         )
 
+    ###################################
+    #Use the same loader implem as in Autobot
     if args.resume or args.weight:
         ckpt_path = args.resume or args.weight
         if not os.path.isabs(ckpt_path):
@@ -82,13 +100,15 @@ def main():
             opt.load_state_dict(ckpt["opt_state"])
 
     if args.eval:
+        val_dset = ArgoH5Dataset(dset_path="datasets/argoverse", split_name="val",
+                                    use_map_lanes=True)
         # Data loader for evaluation
-        dataset = Dataset(config["val_split"], config, train=False)
+        #dataset = Dataset(config["val_split"], config, train=False)
         val_sampler = DistributedSampler(
-            dataset, num_replicas=hvd.size(), rank=hvd.rank()
+            val_dset, num_replicas=hvd.size(), rank=hvd.rank()
         )
         val_loader = DataLoader(
-            dataset,
+            val_dset,
             batch_size=config["val_batch_size"],
             num_workers=config["val_workers"],
             sampler=val_sampler,
@@ -118,12 +138,14 @@ def main():
                 shutil.copy(os.path.join(src_dir, f), os.path.join(dst_dir, f))
 
     # Data loader for training
-    dataset = Dataset(config["train_split"], config, train=True)
+
+    train_dset = ArgoH5Dataset(dset_path="datasets/argoverse", split_name="train",
+                                    use_map_lanes=True)
     train_sampler = DistributedSampler(
-        dataset, num_replicas=hvd.size(), rank=hvd.rank()
+        train_dset, num_replicas=hvd.size(), rank=hvd.rank()
     )
     train_loader = DataLoader(
-        dataset,
+        train_dset,
         batch_size=config["batch_size"],
         num_workers=config["workers"],
         sampler=train_sampler,
@@ -134,10 +156,12 @@ def main():
     )
 
     # Data loader for evaluation
-    dataset = Dataset(config["val_split"], config, train=False)
-    val_sampler = DistributedSampler(dataset, num_replicas=hvd.size(), rank=hvd.rank())
+    #dataset = Dataset(config["val_split"], config, train=False)
+    val_dset = ArgoH5Dataset(dset_path="datasets/argoverse", split_name="val",
+                                    use_map_lanes=True)
+    val_sampler = DistributedSampler(val_dset, num_replicas=hvd.size(), rank=hvd.rank())
     val_loader = DataLoader(
-        dataset,
+        val_dset,
         batch_size=config["val_batch_size"],
         num_workers=config["val_workers"],
         sampler=val_sampler,

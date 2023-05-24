@@ -50,6 +50,8 @@ class OutputModel(nn.Module):
         self.d_k = d_k
         init_ = lambda m: init(m, nn.init.xavier_normal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2))
         self.observation_model = nn.Sequential(
+            # init_(nn.Linear(d_k, d_k)), nn.ReLU(),
+            # init_(nn.Linear(d_k, d_k)), nn.ReLU(),
             init_(nn.Linear(d_k, d_k)), nn.ReLU(),
             init_(nn.Linear(d_k, d_k)), nn.ReLU(),
             init_(nn.Linear(d_k, 5))
@@ -115,6 +117,7 @@ class AutoBotEgo(nn.Module):
         if self.use_map_img:
             self.map_encoder = MapEncoderCNN(d_k=d_k, dropout=self.dropout)
             self.emb_state_map = nn.Sequential(
+                    #init_(nn.Linear(2 * d_k, d_k)), nn.ReLU(),
                     init_(nn.Linear(2 * d_k, d_k)), nn.ReLU(),
                     init_(nn.Linear(d_k, d_k))
                 )
@@ -145,6 +148,7 @@ class AutoBotEgo(nn.Module):
 
         if self.use_map_img:
             self.modemap_net = nn.Sequential(
+                # init_(nn.Linear(2*self.d_k, self.d_k)), nn.ReLU(),
                 init_(nn.Linear(2*self.d_k, self.d_k)), nn.ReLU(),
                 init_(nn.Linear(self.d_k, self.d_k))
             )

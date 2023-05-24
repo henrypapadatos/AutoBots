@@ -2,6 +2,8 @@ import argparse
 import json
 import os
 from collections import namedtuple
+from datetime import datetime
+
 
 
 def get_train_args():
@@ -84,6 +86,7 @@ def get_eval_args():
 
 def create_results_folder(args):
     model_configname = ""
+    model_configname += datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
     model_configname += "Autobot_joint" if "Joint" in args.model_type else "Autobot_ego"
     model_configname += "_C"+str(args.num_modes) + "_H"+str(args.hidden_size) + "_E"+str(args.num_encoder_layers)
     model_configname += "_D"+str(args.num_decoder_layers) + "_TXH"+str(args.tx_hidden_size) + "_NH"+str(args.tx_num_heads)
@@ -91,6 +94,7 @@ def create_results_folder(args):
     model_configname += "_NormLoss" if args.use_FDEADE_aux_loss else ""
     model_configname += "_roadImg" if args.use_map_image else ""
     model_configname += "_roadLanes" if args.use_map_lanes else ""
+
     if args.exp_id is not None:
         model_configname += ("_" + args.exp_id)
     model_configname += "_s"+str(args.seed)

@@ -39,7 +39,7 @@ class Trainer:
 
         self.initialize_dataloaders()
         self.initialize_model()
-        self.optimiser = optim.AdamW(self.autobot_model.parameters(), lr=self.args.learning_rate,
+        self.optimiser = optim.Adam(self.autobot_model.parameters(), lr=self.args.learning_rate,
                                     eps=self.args.adam_epsilon)
         self.optimiser_scheduler = MultiStepLR(self.optimiser, milestones=args.learning_rate_sched, gamma=0.5,
                                                verbose=True)
@@ -496,7 +496,7 @@ if __name__ == "__main__":
         "kl_weight": args.kl_weight,
         "use_FDEADE_aux_loss": args.use_FDEADE_aux_loss,
         "grad_clip_norm": args.grad_clip_norm,
-        "optimizer": 'AdamW'
+        "optimizer": 'Adam'
     })
 
     trainer = Trainer(args, results_dirname)
