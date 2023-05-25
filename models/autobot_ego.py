@@ -288,6 +288,6 @@ class AutoBotEgo(nn.Module):
         mode_probs = F.softmax(self.prob_predictor(mode_params_emb).squeeze(-1), dim=0).transpose(0, 1)
 
         # return  [c, T, B, 5], [B, c]
-        print(mode_probs)
+        # print(mode_probs)
         return out_dists, mode_probs
 

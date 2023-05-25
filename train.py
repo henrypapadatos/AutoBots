@@ -39,10 +39,20 @@ class Trainer:
 
         self.initialize_dataloaders()
         self.initialize_model()
-        self.optimiser = optim.Adam(self.autobot_model.parameters(), lr=self.args.learning_rate,
-                                    eps=self.args.adam_epsilon)
+        
+        if self.args.optimizer == "Adam":
+            self.optimiser = optim.Adam(self.autobot_model.parameters(), lr=self.args.learning_rate,
+                                        eps=self.args.adam_epsilon)
+        elif self.args.optimizer == "AdamW":
+            self.optimiser = optim.AdamW(self.autobot_model.parameters(), lr=self.args.learning_rate,
+                                        eps=self.args.adam_epsilon)
+        else:
+            raise ValueError('Chosen optimizer not implemented, choose between Adam and AdamW')
+
+
         self.optimiser_scheduler = MultiStepLR(self.optimiser, milestones=args.learning_rate_sched, gamma=0.5,
-                                               verbose=True)
+                                                verbose=True)
+            
 
         self.writer = SummaryWriter(log_dir=os.path.join(self.results_dirname, "tb_files"))
         self.smallest_minade_k = 5.0  # for computing best models
@@ -497,7 +507,7 @@ if __name__ == "__main__":
         "kl_weight": args.kl_weight,
         "use_FDEADE_aux_loss": args.use_FDEADE_aux_loss,
         "grad_clip_norm": args.grad_clip_norm,
-        "optimizer": 'Adam',
+        "optimizer": args.optimizer,
         'positionnal embedding': args.positional_embedding
     })
 
