@@ -35,6 +35,7 @@ def get_train_args():
                         help="hidden size of transformer layers' feedforward network.")
     parser.add_argument("--tx-num-heads", type=int, default=16, help="Transformer number of heads.")
     parser.add_argument("--dropout", type=float, default=0.1, help="Dropout strenght used throughout model.")
+    parser.add_argument("--positional_embedding", type=str, default='standard', help='Positional embedding: standard (sinusoidal) or learned')
 
     # Section: Loss Function
     parser.add_argument("--entropy-weight", type=float, default=1.0, metavar="lamda", help="Weight of entropy loss.")

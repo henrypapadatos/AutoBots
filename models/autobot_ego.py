@@ -20,22 +20,35 @@ class PositionalEncoding(nn.Module):
     '''
     Standard positional encoding.
     '''
-    def __init__(self, d_model, dropout=0.1, max_len=20):
+    def __init__(self, pos_type, d_model, dropout=0.1, max_len=20):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer('pe', pe)
+
+        if pos_type == 'standard': 
+            pe = torch.zeros(max_len, d_model)
+            position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+            div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+            pe[:, 0::2] = torch.sin(position * div_term)
+            pe[:, 1::2] = torch.cos(position * div_term)
+            pe = pe.unsqueeze(0).transpose(0, 1)
+            self.register_buffer('pe', pe)
+            
+        elif pos_type == 'learned': 
+            pe = nn.Parameter(torch.Tensor(max_len, d_model), requires_grad=True)
+            nn.init.xavier_uniform_(pe)
+            self.pe = pe.unsqueeze(0).transpose(0, 1)
+
+        else:
+            raise ValueError('positional embedding can be either standard or learned')
+
 
     def forward(self, x):
         '''
         :param x: must be (T, B, H)
         :return:
         '''
+        if self.pe.device != x.device:
+            self.pe = self.pe.to(x.device)
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
 
@@ -76,7 +89,7 @@ class AutoBotEgo(nn.Module):
     AutoBot-Ego Class.
     '''
     def __init__(self, d_k=128, _M=5, c=5, T=30, L_enc=1, dropout=0.0, k_attr=2, map_attr=3,
-                 num_heads=16, L_dec=1, tx_hidden_size=384, use_map_img=False, use_map_lanes=False):
+                 num_heads=16, L_dec=1, tx_hidden_size=384, use_map_img=False, use_map_lanes=False, positional_embeding='standard'):
         super(AutoBotEgo, self).__init__()
 
         init_ = lambda m: init(m, nn.init.xavier_normal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2))
@@ -94,6 +107,7 @@ class AutoBotEgo(nn.Module):
         self.tx_hidden_size = tx_hidden_size
         self.use_map_img = use_map_img
         self.use_map_lanes = use_map_lanes
+        self.positional_embeding = positional_embeding
 
         # INPUT ENCODERS
         self.agents_dynamic_encoder = nn.Sequential(init_(nn.Linear(k_attr, d_k)))
@@ -137,7 +151,7 @@ class AutoBotEgo(nn.Module):
         self.tx_decoder = nn.ModuleList(self.tx_decoder)
 
         # ============================== Positional encoder ==============================
-        self.pos_encoder = PositionalEncoding(d_k, dropout=0.0)
+        self.pos_encoder = PositionalEncoding(self.positional_embeding, d_k, dropout=0.0)
 
         # ============================== OUTPUT MODEL ==============================
         self.output_model = OutputModel(d_k=self.d_k)
@@ -274,5 +288,6 @@ class AutoBotEgo(nn.Module):
         mode_probs = F.softmax(self.prob_predictor(mode_params_emb).squeeze(-1), dim=0).transpose(0, 1)
 
         # return  [c, T, B, 5], [B, c]
+        print(mode_probs)
         return out_dists, mode_probs
 

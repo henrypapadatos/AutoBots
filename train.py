@@ -108,7 +108,8 @@ class Trainer:
                                             tx_hidden_size=self.args.tx_hidden_size,
                                             use_map_img=self.args.use_map_image,
                                             use_map_lanes=self.args.use_map_lanes,
-                                            map_attr=self.map_attr).to(self.device)
+                                            map_attr=self.map_attr,
+                                            positional_embeding=self.args.positional_embedding).to(self.device)
 
         elif "Joint" in self.args.model_type:
             self.autobot_model = AutoBotJoint(k_attr=self.k_attr,
@@ -496,7 +497,8 @@ if __name__ == "__main__":
         "kl_weight": args.kl_weight,
         "use_FDEADE_aux_loss": args.use_FDEADE_aux_loss,
         "grad_clip_norm": args.grad_clip_norm,
-        "optimizer": 'Adam'
+        "optimizer": 'Adam',
+        'positionnal embedding': args.positional_embedding
     })
 
     trainer = Trainer(args, results_dirname)
