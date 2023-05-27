@@ -120,7 +120,8 @@ class Trainer:
                                             use_map_img=self.args.use_map_image,
                                             use_map_lanes=self.args.use_map_lanes,
                                             map_attr=self.map_attr,
-                                            positional_embeding=self.args.positional_embedding).to(self.device)
+                                            positional_embeding=self.args.positional_embedding,
+                                            multi_stage_loss=self.args.multi_stage_loss).to(self.device)
 
         elif "Joint" in self.args.model_type:
             self.autobot_model = AutoBotJoint(k_attr=self.k_attr,
@@ -206,10 +207,30 @@ class Trainer:
                 ego_in, ego_out, agents_in, roads = self._data_to_device(data)
                 pred_obs, mode_probs = self.autobot_model(ego_in, agents_in, roads)
 
-                nll_loss, kl_loss, post_entropy, adefde_loss = nll_loss_multimodes(pred_obs, ego_out[:, :, :2], mode_probs,
-                                                                                   entropy_weight=self.args.entropy_weight,
-                                                                                   kl_weight=self.args.kl_weight,
-                                                                                   use_FDEADE_aux_loss=self.args.use_FDEADE_aux_loss)
+                if self.args.multi_stage_loss:
+                    nll_loss_acc = 0.0
+                    kl_loss_acc = 0.0
+                    post_entropy_acc = 0.0
+                    adefde_loss_acc = 0.0
+                    for el in pred_obs:
+                        nll_loss, kl_loss, post_entropy, adefde_loss = nll_loss_multimodes(el, ego_out[:, :, :2], mode_probs,
+                                                                                    entropy_weight=self.args.entropy_weight,
+                                                                                    kl_weight=self.args.kl_weight,
+                                                                                    use_FDEADE_aux_loss=self.args.use_FDEADE_aux_loss)
+                        nll_loss_acc+=nll_loss
+                        kl_loss_acc+=kl_loss
+                        post_entropy_acc+=post_entropy
+                        adefde_loss_acc+=adefde_loss
+                    nll_loss = nll_loss_acc/len(pred_obs)
+                    kl_loss = kl_loss_acc/len(pred_obs)
+                    post_entropy = post_entropy_acc/len(pred_obs)
+                    adefde_loss = adefde_loss_acc/len(pred_obs)
+                    pred_obs=pred_obs[-1]
+                else: 
+                    nll_loss, kl_loss, post_entropy, adefde_loss = nll_loss_multimodes(pred_obs, ego_out[:, :, :2], mode_probs,
+                                                                                    entropy_weight=self.args.entropy_weight,
+                                                                                    kl_weight=self.args.kl_weight,
+                                                                                    use_FDEADE_aux_loss=self.args.use_FDEADE_aux_loss)
 
                 self.optimiser.zero_grad()
                 (nll_loss + adefde_loss + kl_loss).backward()
@@ -277,6 +298,9 @@ class Trainer:
 
                 # encode observations
                 pred_obs, mode_probs = self.autobot_model(ego_in, agents_in, roads)
+
+                if self.args.multi_stage_loss:
+                    pred_obs = pred_obs[-1]
 
                 ade_losses, fde_losses = self._compute_ego_errors(pred_obs, ego_out)
                 val_ade_losses.append(ade_losses)
@@ -509,7 +533,8 @@ if __name__ == "__main__":
         "use_FDEADE_aux_loss": args.use_FDEADE_aux_loss,
         "grad_clip_norm": args.grad_clip_norm,
         "optimizer": args.optimizer,
-        'positionnal embedding': args.positional_embedding
+        'positionnal embedding': args.positional_embedding,
+        'multi stage loss': args.multi_stage_loss
     })
 
     trainer = Trainer(args, results_dirname)

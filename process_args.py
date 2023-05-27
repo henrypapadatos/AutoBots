@@ -52,6 +52,7 @@ def get_train_args():
     parser.add_argument("--grad-clip-norm", type=float, default=5, metavar="C", help="Gradient clipping norm")
     parser.add_argument("--num-epochs", type=int, default=150, metavar="I", help="number of iterations through the dataset.")
     parser.add_argument("--optimizer", type=str, default='Adam')
+    parser.add_argument("--multi_stage_loss", type=bool, default=False, help="True if you want the loss to be computed on each stage of the decoder, False otherwise")
     args = parser.parse_args()
 
     if args.use_map_image and args.use_map_lanes:

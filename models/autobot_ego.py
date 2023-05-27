@@ -8,7 +8,6 @@ from einops import repeat
 import torch.nn.functional as F
 from models.context_encoders import MapEncoderCNN, MapEncoderPts
 
-
 def init(module, weight_init, bias_init, gain=1):
     '''
     This function provides weight and bias initializations for linear layers.
@@ -122,7 +121,8 @@ class AutoBotEgo(nn.Module):
     AutoBot-Ego Class.
     '''
     def __init__(self, d_k=128, _M=5, c=5, T=30, L_enc=1, dropout=0.0, k_attr=2, map_attr=3,
-                 num_heads=16, L_dec=1, tx_hidden_size=384, use_map_img=False, use_map_lanes=False, positional_embeding='standard'):
+                 num_heads=16, L_dec=1, tx_hidden_size=384, use_map_img=False, use_map_lanes=False, 
+                 positional_embeding='standard', multi_stage_loss=False):
         super(AutoBotEgo, self).__init__()
 
         init_ = lambda m: init(m, nn.init.xavier_normal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2))
@@ -141,6 +141,7 @@ class AutoBotEgo(nn.Module):
         self.use_map_img = use_map_img
         self.use_map_lanes = use_map_lanes
         self.positional_embeding = positional_embeding
+        self.multi_stage_loss = multi_stage_loss
 
         # INPUT ENCODERS
         self.agents_dynamic_encoder = nn.Sequential(init_(nn.Linear(k_attr, d_k)))
@@ -179,8 +180,8 @@ class AutoBotEgo(nn.Module):
         self.tx_decoder = []
         for _ in range(self.L_dec):
             self.tx_decoder.append(nn.TransformerDecoderLayer(d_model=self.d_k, nhead=self.num_heads,
-                                                              dropout=self.dropout,
-                                                              dim_feedforward=self.tx_hidden_size))
+                                                            dropout=self.dropout,
+                                                            dim_feedforward=self.tx_hidden_size))
         self.tx_decoder = nn.ModuleList(self.tx_decoder)
 
         # ============================== Positional encoder ==============================
@@ -299,6 +300,7 @@ class AutoBotEgo(nn.Module):
         # AutoBot-Ego Decoding
         out_seq = self.Q.repeat(1, B, 1, 1).view(self.T, B*self.c, -1)
         time_masks = self.generate_decoder_mask(seq_len=self.T, device=ego_in.device)
+        out_dists_array = []
         for d in range(self.L_dec):
             if self.use_map_img and d == 1:
                 ego_dec_emb_map = torch.cat((out_seq, map_features), dim=-1)
@@ -308,7 +310,10 @@ class AutoBotEgo(nn.Module):
                                                        key_padding_mask=road_segs_masks)[0]
                 out_seq = out_seq + ego_dec_emb_map
             out_seq = self.tx_decoder[d](out_seq, context, tgt_mask=time_masks, memory_key_padding_mask=env_masks)
-        out_dists = self.output_model(out_seq).reshape(self.T, B, self.c, -1).permute(2, 0, 1, 3)
+            if self.multi_stage_loss:
+                out_dists_array.append(self.output_model(out_seq).reshape(self.T, B, self.c, -1).permute(2, 0, 1, 3))
+        if not self.multi_stage_loss:        
+            out_dists = self.output_model(out_seq).reshape(self.T, B, self.c, -1).permute(2, 0, 1, 3)
 
         # Mode prediction
         mode_params_emb = self.P.repeat(1, B, 1)
@@ -320,7 +325,12 @@ class AutoBotEgo(nn.Module):
                                                  key_padding_mask=orig_road_segs_masks)[0] + mode_params_emb
         mode_probs = F.softmax(self.prob_predictor(mode_params_emb).squeeze(-1), dim=0).transpose(0, 1)
 
-        # return  [c, T, B, 5], [B, c]
+       
         # print(mode_probs)
-        return out_dists, mode_probs
+        if self.multi_stage_loss: 
+             # return  array of [c, T, B, 5], [B, c]
+            return out_dists_array, mode_probs
+        else:
+             # return  [c, T, B, 5], [B, c]
+            return out_dists, mode_probs
 
