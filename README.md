@@ -1,6 +1,25 @@
-# AutoBots Official Repository
+# Multimodal joint trajectory prediction - Deep learning for Autonomous Vehicles EPFL
+This repository is a fork of the [official implementation](https://github.com/roggirg/AutoBots) of the [AutoBots](https://arxiv.org/abs/2104.00563) architectures.
 
-This repository is the official implementation of the [AutoBots](https://arxiv.org/abs/2104.00563) architectures.
+## Contribution Overview
+
+### AdamW
+### GELU
+### Learned positional encoding
+### Multi-layer loss
+
+## Description of the dataset 
+
+## Results
+
+## Conclusion
+
+## Difficulties encountered
+
+
+
+## Here is a copy of the official AutoBot REAMDE file for installation, setup of datasets, training and evaluation: 
+
 We include support for the following datasets:
 - [nuScenes](https://www.nuscenes.org/nuscenes) (ego-agent, multi-agent)
 - [Argoverse](https://www.argoverse.org/av1.html) (ego-agent)
