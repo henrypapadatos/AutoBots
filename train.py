@@ -37,9 +37,10 @@ class Trainer:
         else:
             self.device = torch.device("cpu")
 
+        print("Number of availble GPUs", torch.cuda.device_count())
         self.initialize_dataloaders()
         self.initialize_model()
-        
+
         if self.args.optimizer == "Adam":
             self.optimiser = optim.Adam(self.autobot_model.parameters(), lr=self.args.learning_rate,
                                         eps=self.args.adam_epsilon)

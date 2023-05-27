@@ -1,8 +1,10 @@
 import math
+from functools import lru_cache
 
 import numpy as np
 import torch
 import torch.nn as nn
+from einops import repeat
 import torch.nn.functional as F
 from models.context_encoders import MapEncoderCNN, MapEncoderPts
 
@@ -14,6 +16,37 @@ def init(module, weight_init, bias_init, gain=1):
     weight_init(module.weight.data, gain=gain)
     bias_init(module.bias.data)
     return module
+
+
+class RotaryEncoding(torch.nn.Module):
+    def __init__(self, d_model, max_seq_len, θ=10000):
+        super(RotaryEncoding, self).__init__()
+        self.d_model = d_model
+        self.max_seq_len = max_seq_len
+        inv_freq = 1. / (θ ** (torch.arange(0, d_model, 2, dtype=torch.float32) / d_model))
+        print(inv_freq)
+        self.register_buffer('inv_freq', inv_freq)
+
+    @lru_cache(maxsize=None)
+    def cached_pos_enc(self, t):
+        pos_enc = torch.einsum('i,j->ij', torch.arange(t), self.inv_freq)
+        return repeat(pos_enc, '... f -> ... (f r)', r=2)
+
+    @staticmethod
+    def rotate_half(u):
+        # last dimension of u is [u1, u2, u3, u4, ...]
+        u1, u2 = rearrange(u, '... (d r) -> r ... d', r=2)
+        u = torch.stack((-u2, u1), axis=-1)
+        # last dimension of result is [-u2, u1, -u4, u3, ...]
+        return rearrange(u, '... d r -> ... (d r)')
+
+    def forward(self, x):
+        seq_len = x.shape[-2]
+        if seq_len > self.max_seq_len:
+            raise ValueError("Sequence length exceeds maximum sequence length")
+        pos_enc = self.cached_pos_enc(seq_len)[:seq_len]
+        print(pos_enc.shape)
+        return x * torch.cos(pos_enc) + self.rotate_half(x) * torch.sin(pos_enc)
 
 
 class PositionalEncoding(nn.Module):
