@@ -30,7 +30,7 @@ from tqdm import tqdm
 
 #import scipy.stats as st
 
-from data import ArgoTestDataset
+from cemetery.data import ArgoTestDataset
 from utils import Logger, load_pretrain
 
 

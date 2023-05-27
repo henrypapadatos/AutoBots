@@ -12,7 +12,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as d
 
-from data import ArgoDataset, collate_fn
+from cemetery.data import ArgoDataset, collate_fn
 from utilss import gpu, to_long,  Optimizer, StepLR
 
 from layers import Conv1d, Res1d, Linear, LinearRes, Null
