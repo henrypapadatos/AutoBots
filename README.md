@@ -3,9 +3,26 @@ This repository is a fork of the [official implementation](https://github.com/ro
 
 ## Contribution Overview
 
-### AdamW
-### GELU
+### Optimizer and activation function 
+A first potential amelioration is to use the AdamW optimizer instead of the classic Adam one. Opposed to Adam, AdamW does not put the weight decay term in the moving average. This change [often results](https://towardsdatascience.com/why-adamw-matters-736223f31b5d#:~:text=The%20authors%20show%20experimentally%20that,stochastic%20gradient%20descent%20with%20momentum.) in a better training loss and in less overfitting. 
+
+Another improvement that can be tested is to replace the ReLU activation function with GELU, as GELU's smoother nature allows the model to [better capture](https://www.saltdatalabs.com/blog/deep-learning-101-transformer-activation-functions-explainer-relu-leaky-relu-gelu-elu-selu-softmax-and-more) complex patterns within the data.
+
 ### Learned positional encoding
+The positional encoding implemented in the AutoBot arcitecture is the classic sinusoidal positional encoding used by vaswani et al. in the first transformer architecture. With _t_ being the position of the input token in the sequence and _d_ being the encoding dimension. The sinusoidal positional encoding $\overrightarrow{p_t}$ can be written as follow: 
+
+$$
+{\overrightarrow{p_t}}^{(i)}=f(t)^{(i)}:= \begin{cases}\sin \left(\omega_k \cdot t\right), & \text { if } i=2 k \\\ \cos \left(\omega_k \cdot t\right), & \text { if } i=2 k+1\end{cases}
+$$
+
+where
+$$\omega_k=\frac{1}{10000^{2 k / d}}$$
+
+Here is a vizualisation if the sinusoidal positional encoding as presented in [this](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) blogpost:
+![Screenshot 2023-05-28 124239](https://github.com/henrypapadatos/AutoBots/assets/63106608/6afe4746-de46-4541-af73-45025775e50a)
+
+Alternatively, the positional encoding can be learned as a model paramater. This approach is becoming more and more popular and we have therefore deciced to test it in the Autobot architecture. 
+
 ### Multi-layer loss
 
 ## Description of the dataset 
