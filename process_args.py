@@ -36,6 +36,7 @@ def get_train_args():
     parser.add_argument("--tx-num-heads", type=int, default=16, help="Transformer number of heads.")
     parser.add_argument("--dropout", type=float, default=0.1, help="Dropout strenght used throughout model.")
     parser.add_argument("--positional_embedding", type=str, default='standard', help='Positional embedding: standard (sinusoidal) or learned')
+    parser.add_argument("--activation_function", type=str, default='ReLU', help='specify the activation fucntion: "ReLU" or "GELU"')
 
     # Section: Loss Function
     parser.add_argument("--entropy-weight", type=float, default=1.0, metavar="lamda", help="Weight of entropy loss.")
@@ -53,6 +54,7 @@ def get_train_args():
     parser.add_argument("--num-epochs", type=int, default=150, metavar="I", help="number of iterations through the dataset.")
     parser.add_argument("--optimizer", type=str, default='Adam')
     parser.add_argument("--multi_stage_loss", type=bool, default=False, help="True if you want the loss to be computed on each stage of the decoder, False otherwise")
+    parser.add_argument("--L2_regularization", type=float, default=0.01)
     args = parser.parse_args()
 
     if args.use_map_image and args.use_map_lanes:
@@ -80,10 +82,12 @@ def get_eval_args():
     parser.add_argument("--dataset-path", type=str, required=True, help="Dataset path.")
     parser.add_argument("--batch-size", type=int, default=100, help="Batch size")
     parser.add_argument("--disable-cuda", action="store_true", help="Disable CUDA")
+    parser.add_argument("--activation_function", type=str, default='ReLU', help='specify the activation fucntion: "ReLU" or "GELU"')
     args = parser.parse_args()
 
     config, model_dirname = load_config(args.models_path)
     config = namedtuple("config", config.keys())(*config.values())
+    print(config)
     return args, config, model_dirname
 
 

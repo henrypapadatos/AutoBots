@@ -80,7 +80,8 @@ class Evaluator:
                                             tx_hidden_size=self.model_config.tx_hidden_size,
                                             use_map_img=self.model_config.use_map_image,
                                             use_map_lanes=self.model_config.use_map_lanes,
-                                            map_attr=self.map_attr).to(self.device)
+                                            map_attr=self.map_attr,
+                                            activation_function=self.args.activation_function).to(self.device)
 
         elif "Joint" in self.model_config.model_type:
             self.autobot_model = AutoBotJoint(k_attr=self.k_attr,

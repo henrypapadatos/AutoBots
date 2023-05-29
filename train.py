@@ -46,8 +46,8 @@ class Trainer:
                                         eps=self.args.adam_epsilon)
         elif self.args.optimizer == "AdamW":
             self.optimiser = optim.AdamW(self.autobot_model.parameters(), lr=self.args.learning_rate,
-                                        eps=self.args.adam_epsilon)
-        else:
+                                        eps=self.args.adam_epsilon, weight_decay=self.args.L2_regularization)
+        else: 
             raise ValueError('Chosen optimizer not implemented, choose between Adam and AdamW')
 
 
@@ -121,7 +121,8 @@ class Trainer:
                                             use_map_lanes=self.args.use_map_lanes,
                                             map_attr=self.map_attr,
                                             positional_embeding=self.args.positional_embedding,
-                                            multi_stage_loss=self.args.multi_stage_loss).to(self.device)
+                                            multi_stage_loss=self.args.multi_stage_loss,
+                                            activation_function=self.args.activation_function).to(self.device)
 
         elif "Joint" in self.args.model_type:
             self.autobot_model = AutoBotJoint(k_attr=self.k_attr,
@@ -534,7 +535,9 @@ if __name__ == "__main__":
         "grad_clip_norm": args.grad_clip_norm,
         "optimizer": args.optimizer,
         'positionnal embedding': args.positional_embedding,
-        'multi stage loss': args.multi_stage_loss
+        'multi stage loss': args.multi_stage_loss,
+        'activation function': args.activation_function,
+        'L2_reg': args.L2_regularization
     })
 
     trainer = Trainer(args, results_dirname)

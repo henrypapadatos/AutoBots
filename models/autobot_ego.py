@@ -90,15 +90,20 @@ class OutputModel(nn.Module):
     This class operates on the output of AutoBot-Ego's decoder representation. It produces the parameters of a
     bivariate Gaussian distribution.
     '''
-    def __init__(self, d_k=64):
+    def __init__(self, d_k=64, _activation_function='ReLU'):
         super(OutputModel, self).__init__()
         self.d_k = d_k
         init_ = lambda m: init(m, nn.init.xavier_normal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2))
+        if _activation_function == "ReLU":
+            activation_function = nn.ReLU()
+        elif _activation_function == "GELU":
+            activation_function = nn.GELU()
+        else:
+            raise ValueError('Chosen activation function not implemented, choose between ReLU and GELU')
+
         self.observation_model = nn.Sequential(
-            # init_(nn.Linear(d_k, d_k)), nn.ReLU(),
-            # init_(nn.Linear(d_k, d_k)), nn.ReLU(),
-            init_(nn.Linear(d_k, d_k)), nn.ReLU(),
-            init_(nn.Linear(d_k, d_k)), nn.ReLU(),
+            init_(nn.Linear(d_k, d_k)), activation_function,
+            init_(nn.Linear(d_k, d_k)), activation_function,
             init_(nn.Linear(d_k, 5))
         )
         self.min_stdev = 0.01
@@ -122,7 +127,7 @@ class AutoBotEgo(nn.Module):
     '''
     def __init__(self, d_k=128, _M=5, c=5, T=30, L_enc=1, dropout=0.0, k_attr=2, map_attr=3,
                  num_heads=16, L_dec=1, tx_hidden_size=384, use_map_img=False, use_map_lanes=False, 
-                 positional_embeding='standard', multi_stage_loss=False):
+                 positional_embeding='standard', multi_stage_loss=False, activation_function='ReLU'):
         super(AutoBotEgo, self).__init__()
 
         init_ = lambda m: init(m, nn.init.xavier_normal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2))
@@ -142,6 +147,7 @@ class AutoBotEgo(nn.Module):
         self.use_map_lanes = use_map_lanes
         self.positional_embeding = positional_embeding
         self.multi_stage_loss = multi_stage_loss
+        self.activation_function = activation_function
 
         # INPUT ENCODERS
         self.agents_dynamic_encoder = nn.Sequential(init_(nn.Linear(k_attr, d_k)))
@@ -162,11 +168,18 @@ class AutoBotEgo(nn.Module):
         self.social_attn_layers = nn.ModuleList(self.social_attn_layers)
 
         # ============================== MAP ENCODER ==========================
+        if self.activation_function == "ReLU":
+            activation_function = nn.ReLU()
+        elif self.activation_function == "GELU":
+            activation_function = nn.GELU()
+        else:
+            raise ValueError('Chosen activation function not implemented, choose between ReLU and GELU')
+
+
         if self.use_map_img:
             self.map_encoder = MapEncoderCNN(d_k=d_k, dropout=self.dropout)
             self.emb_state_map = nn.Sequential(
-                    #init_(nn.Linear(2 * d_k, d_k)), nn.ReLU(),
-                    init_(nn.Linear(2 * d_k, d_k)), nn.ReLU(),
+                    init_(nn.Linear(2 * d_k, d_k)), activation_function,
                     init_(nn.Linear(d_k, d_k))
                 )
         elif self.use_map_lanes:
@@ -188,7 +201,7 @@ class AutoBotEgo(nn.Module):
         self.pos_encoder = PositionalEncoding(self.positional_embeding, d_k, dropout=0.0)
 
         # ============================== OUTPUT MODEL ==============================
-        self.output_model = OutputModel(d_k=self.d_k)
+        self.output_model = OutputModel(d_k=self.d_k, _activation_function= self.activation_function)
 
         # ============================== Mode Prob prediction (P(z|X_1:t)) ==============================
         self.P = nn.Parameter(torch.Tensor(c, 1, d_k), requires_grad=True)  # Appendix C.2.
@@ -196,8 +209,7 @@ class AutoBotEgo(nn.Module):
 
         if self.use_map_img:
             self.modemap_net = nn.Sequential(
-                # init_(nn.Linear(2*self.d_k, self.d_k)), nn.ReLU(),
-                init_(nn.Linear(2*self.d_k, self.d_k)), nn.ReLU(),
+                init_(nn.Linear(2*self.d_k, self.d_k)), activation_function,
                 init_(nn.Linear(self.d_k, self.d_k))
             )
         elif self.use_map_lanes:
