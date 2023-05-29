@@ -35,7 +35,7 @@ By incorporating the gradients at each layer, we facilitate better propagation o
 
 ## Experimental Setup
 
-Due to numerous challenges faced with SCITAS, we have sought the assistance of a friend who possesses a setup with 2 NVIDIA GeForce RTX 2080 Ti GPUs. For all our experiments, we trained the models across 150 epochs, which translates to approximately 15 hours of training time. To monitor and record the results of all our experiments, we used [Wandb](https://wandb.ai/), a platform for tracking and visualizing machine learning experiments. The complete logs for our experiments can be found at this [link](https://wandb.ai/henrypapadatos/Autobot?workspace=user-henrypapadatos).
+Due to many challenges faced with SCITAS, we have sought the assistance of a friend who possesses a setup with 2 NVIDIA GeForce RTX 2080 Ti GPUs. For all our experiments, we trained the models across 150 epochs, which translates to approximately 15 hours of training time. To monitor and record the results of all our experiments, we used [Wandb](https://wandb.ai/), a platform for tracking and visualizing machine learning experiments. The complete logs for our experiments can be found at this [link](https://wandb.ai/henrypapadatos/Autobot?workspace=user-henrypapadatos).
 
 As evaluation metrics, we will use the Min ADE which is the average L2 distance between the predicted and ground truth trajectories. And we will also use the
 Min FDE which is the averaged L2 distance between the final points of the most likely prediction and ground truth across all agents.
@@ -46,7 +46,7 @@ In our opinion, these 2 metrics represent well the quality of the predictions.
 ### Description of the dataset
 Argoverse 1 Motion Forecasting is a compilation of 324’557 scenarios used for training and validation. Each scenario is 5 seconds long and includes the 2D centroid coordinates of tracked objects from a bird’s-eye view perspective. These centroid coordinates are sampled at a rate of 10 Hz.
 
-To create this collection, extensive analysis was performed on over 1000 hours of driving data obtained from self-driving test vehicles. The focus was on identifying and including the most challenging segments, such as those featuring vehicles at intersections, vehicles making left or right turns, and vehicle changing lanes.
+To create this collection, extensive analysis was performed on over 1000 hours of driving data obtained from self-driving test vehicles. The focus was on identifying and including the most challenging segments, such as those featuring vehicles at intersections, vehicles making left or right turns, and vehicles changing lanes.
 
 Our model incorporates the map segments and the 2D trajectories of all vehicles in the scene as inputs.
 
@@ -129,7 +129,7 @@ To test these experiments, use the following arguments:
 | Autobots (Adam +ReLU)     | 0.7159       | 0.6562       | 1.112        |
 
 The Autobots architecture is our baseline, it is implemented with Adam and ReLU. 
-We observe that AdamW + ReLU performs better for the minADE 5 metric and AdamW + GELU perform better for minADE 6 and minFDE 6. However, these amelioration are not large. 
+We observe that AdamW + ReLU performs better for the minADE 5 metric and AdamW + GELU performs better for minADE 6 and minFDE 6. However, these amelioration are not large. 
 
 ### Learned positional encoding
 To test this experiment, use the following argument: 
@@ -142,7 +142,7 @@ To test this experiment, use the following argument:
 | Learned PE | 0.7531       | 1.155        | **0.6774**       |
 | Autobots (Sinusoidal PE)  | **0.7159**       | **0.6562**       | 1.112        |
 
-The results of this experiment are intriguing. The learned PE drastically improve the performences of Val MinADE 6 but reduces them by a lot for minFDE 6. In light of these results, we decided to stick to the classic sinusoidal PE for the following experiments.
+The results of this experiment are intriguing. The learned PE drastically improve the performances of Val MinADE 6 but reduces them by a lot for minFDE 6. In light of these results, we decided to stick to the classic sinusoidal PE for the following experiments.
 
 ### Multi-layer loss (MLL)
 To test this experiment, use the following arguments: 
@@ -163,7 +163,7 @@ Along with testing the multilayer loss, we also tried to add more decoder layers
 | num-decoder-layers & MLL | 0.7382       | 0.6527       | 1.106        |
 | Autobots  (num-decoder-layers 2)  | **0.7159**       | 0.6562       | 1.112        |
 
-It appears that increasing the number of decoders does not significantly enhance performance, with the exception of a slight improvement in Val minFDE 6. Interestingly, the metric curves from the test sets demonstrate better results with a larger architecture, as illustrated in the graph below.
+It appears that increasing the number of decoders does not significantly enhance performance, except for slight improvements in Val minFDE 6. Interestingly, the metric curves from the test sets demonstrate better results with a larger architecture, as illustrated in the graph below.
 <img src="https://github.com/henrypapadatos/AutoBots/assets/63106608/6d8a7901-3ecf-45a8-81b0-79c689ba6280"  width="80%" height="40%">
 This discrepancy suggests the presence of overfitting. To address this issue, we have opted to experiment with varying levels of L2 regularization in our final experiment.
 
