@@ -4,12 +4,12 @@ This repository is a fork of the [official implementation](https://github.com/ro
 ## Contribution Overview
 
 ### Optimizer and activation function 
-A first potential amelioration is to use the AdamW optimizer instead of the classic Adam one. Opposed to Adam, AdamW does not put the weight decay term in the moving average. This change [often results](https://towardsdatascience.com/why-adamw-matters-736223f31b5d#:~:text=The%20authors%20show%20experimentally%20that,stochastic%20gradient%20descent%20with%20momentum.) in a better training loss and in less overfitting. 
+A first potential amelioration is to use the AdamW optimizer instead of the classic Adam one. Opposed to Adam, AdamW does not put the weight decay term in the moving average. This change [often results](https://towardsdatascience.com/why-adamw-matters-736223f31b5d#:~:text=The%20authors%20show%20experimentally%20that,stochastic%20gradient%20descent%20with%20momentum.) in a better training loss and less overfitting.
 
 Another improvement that can be tested is to replace the ReLU activation function with GELU, as GELU's smoother nature allows the model to [better capture](https://www.saltdatalabs.com/blog/deep-learning-101-transformer-activation-functions-explainer-relu-leaky-relu-gelu-elu-selu-softmax-and-more) complex patterns within the data.
 
 ### Learned positional encoding
-The positional encoding implemented in the AutoBot arcitecture is the classic sinusoidal positional encoding used by vaswani et al. in the [first transformer architecture](https://arxiv.org/abs/1706.03762). With _t_ being the position of the input token in the sequence and _d_ being the encoding dimension. The sinusoidal positional encoding $\overrightarrow{p_t}$ can be written as follow: 
+The positional encoding implemented in the AutoBot architecture is the classic sinusoidal positional encoding used by Vaswani et al. in the [first transformer architecture](https://arxiv.org/abs/1706.03762). With _t_ being the position of the input token in the sequence and _d_ being the encoding dimension. The sinusoidal positional encoding $\overrightarrow{p_t}$ can be written as follow:
 
 $$
 {\overrightarrow{p_t}}^{(i)}=f(t)^{(i)}:= \begin{cases}\sin \left(\omega_k \cdot t\right), & \text { if } i=2 k \\\ \cos \left(\omega_k \cdot t\right), & \text { if } i=2 k+1\end{cases}
@@ -27,7 +27,8 @@ An alternative is to learn the positional encoding as a model parameter, which c
 ### Multi-layer loss
 In the initial AutoBot implementation, the computation of loss is limited to the final layer of the decoder. However, in our proposed methodology, we aim to calculate the loss across all the decoder layers and perform backpropagation based on the average of these losses. The diagram below provides a clear representation of the multi-layer loss implementation:
 
-[SCHEMA]
+![schema](https://github.com/henrypapadatos/AutoBots/assets/63106608/f07a0ffe-6b99-4b03-9929-14a399cc9f21)
+
 
 By incorporating the gradients at each layer, we facilitate better propagation of loss throughout the model. This approach is expected to enhance the stability of the learning process and potentially improve overall performance.
 
@@ -162,9 +163,9 @@ Along with testing the multilayer loss, we also tried to add more decoder layers
 | num-decoder-layers & MLL | 0.7382       | 0.6527       | 1.106        |
 | Autobots  (num-decoder-layers 2)  | **0.7159**       | 0.6562       | 1.112        |
 
-It seems that adding more decoder doesn't improve the performances. Except fot the Val minFDE 6 which is slightly better. However, the metrics curve on the test sets were clearly showing better results for the bigger architecture (as can be observed in the following graph). 
-![W B Chart 29_05_2023 17_31_14](https://github.com/henrypapadatos/AutoBots/assets/63106608/6d8a7901-3ecf-45a8-81b0-79c689ba6280)
-This is a symptom of overfitting. We therefore decided to test different values of L2 regularization in our last experiment. 
+It appears that increasing the number of decoders does not significantly enhance performance, with the exception of a slight improvement in Val minFDE 6. Interestingly, the metric curves from the test sets demonstrate better results with a larger architecture, as illustrated in the graph below.
+<img src="https://github.com/henrypapadatos/AutoBots/assets/63106608/6d8a7901-3ecf-45a8-81b0-79c689ba6280"  width="80%" height="40%">
+This discrepancy suggests the presence of overfitting. To address this issue, we have opted to experiment with varying levels of L2 regularization in our final experiment.
 
 To test this experiment, use the following argument: 
 ```
