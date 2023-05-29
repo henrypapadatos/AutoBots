@@ -9,7 +9,7 @@ A first potential amelioration is to use the AdamW optimizer instead of the clas
 Another improvement that can be tested is to replace the ReLU activation function with GELU, as GELU's smoother nature allows the model to [better capture](https://www.saltdatalabs.com/blog/deep-learning-101-transformer-activation-functions-explainer-relu-leaky-relu-gelu-elu-selu-softmax-and-more) complex patterns within the data.
 
 ### Learned positional encoding
-The positional encoding implemented in the AutoBot arcitecture is the classic sinusoidal positional encoding used by vaswani et al. in the first transformer architecture. With _t_ being the position of the input token in the sequence and _d_ being the encoding dimension. The sinusoidal positional encoding $\overrightarrow{p_t}$ can be written as follow: 
+The positional encoding implemented in the AutoBot arcitecture is the classic sinusoidal positional encoding used by vaswani et al. in the [first transformer architecture](https://arxiv.org/abs/1706.03762). With _t_ being the position of the input token in the sequence and _d_ being the encoding dimension. The sinusoidal positional encoding $\overrightarrow{p_t}$ can be written as follow: 
 
 $$
 {\overrightarrow{p_t}}^{(i)}=f(t)^{(i)}:= \begin{cases}\sin \left(\omega_k \cdot t\right), & \text { if } i=2 k \\\ \cos \left(\omega_k \cdot t\right), & \text { if } i=2 k+1\end{cases}
@@ -19,15 +19,24 @@ where
 $$\omega_k=\frac{1}{10000^{2 k / d}}$$
 
 Here is a vizualisation if the sinusoidal positional encoding as presented in [this](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) blogpost:
-![Screenshot 2023-05-28 124239](https://github.com/henrypapadatos/AutoBots/assets/63106608/6afe4746-de46-4541-af73-45025775e50a)
+![Screenshot 2023-05-28 124239](https://github.com/henrypapadatos/AutoBots/assets/63106608/6ca6d358-64fe-42c5-acdb-6602bd59741c)
 
-Alternatively, the positional encoding can be learned as a model paramater. This approach is becoming more and more popular and we have therefore deciced to test it in the Autobot architecture. 
+An alternative is to learn the positional encoding as a model parameter, which could provide the model with more flexibility in representing the relationship between time steps. As learned positional encoding is becoming increasingly popular (LINK?), we decided to test it within the AutoBot architecture.
+
 
 ### Multi-layer loss
+In the initial AutoBot implementation, the computation of loss is limited to the final layer of the decoder. However, in our proposed methodology, we aim to calculate the loss across all the decoder layers and perform backpropagation based on the average of these losses. The diagram below provides a clear representation of the multi-layer loss implementation:
 
+[SCHEMA]
+
+By incorporating the gradients at each layer, we facilitate better propagation of loss throughout the model. This approach is expected to enhance the stability of the learning process and potentially improve overall performance.
 ## Description of the dataset 
 
 ## Results
+### Optimizer and activation function 
+### Learned positional encoding
+### Multi-layer loss
+
 
 ## Conclusion
 
