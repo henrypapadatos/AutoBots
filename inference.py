@@ -248,6 +248,12 @@ class Evaluator:
                 # encode observations
                 pred_obs, mode_probs = self.autobot_model(ego_in, agents_in, roads)
 
+                try:
+                    if self.args.multi_stage_loss:
+                        pred_obs = pred_obs[-1]
+                except:
+                    pass
+
                 ade_losses, fde_losses = self._compute_ego_errors(pred_obs, ego_out)
                 val_ade_losses.append(ade_losses)
                 val_fde_losses.append(fde_losses)
@@ -263,8 +269,8 @@ class Evaluator:
             val_minfde_1 = min_xde_K(val_fde_losses, val_mode_probs, K=1)
 
             print("minADE_{}:".format(self.model_config.num_modes), val_minade_c[0],
-                  "minADE_10", val_minade_10[0], "minADE_5", val_minade_5[0],
-                  "minFDE_{}:".format(self.model_config.num_modes), val_minfde_c[0], "minFDE_1:", val_minfde_1[0])
+                  "minADE_5", val_minade_5[0],
+                  "minFDE_{}:".format(self.model_config.num_modes), val_minfde_c[0])
 
     def evaluate(self):
         if "Joint" in self.model_config.model_type:
