@@ -42,6 +42,8 @@ Min FDE which is the averaged L2 distance between the final points of the most l
 In our opinion, these 2 metrics represent well the quality of the predictions.
 
 ## Getting started
+1. Create a python 3.7 environment.
+2. Run pip install -r requirements.txt
 
 ### Description of the dataset
 Argoverse 1 Motion Forecasting is a compilation of 324’557 scenarios used for training and validation. Each scenario is 5 seconds long and includes the 2D centroid coordinates of tracked objects from a bird’s-eye view perspective. These centroid coordinates are sampled at a rate of 10 Hz.
@@ -106,10 +108,6 @@ Training AutoBot-Ego on Argoverse while using the raw road segments in the map:
 python train.py --exp-id test --seed 1 --dataset Argoverse --model-type Autobot-Ego --num-modes 6 --hidden-size 128 --num-encoder-layers 2 --num-decoder-layers 2 --dropout 0.1 --entropy-weight 40.0 --kl-weight 20.0 --use-FDEADE-aux-loss True --use-map-lanes True --tx-hidden-size 384 --batch-size 64 --learning-rate 0.00075 --learning-rate-sched 10 20 30 40 50 --dataset-path /path/to/root/of/argoverse_h5_files
 ```
 ### Evaluating an AutoBot model
-For all experiments, you can evaluate the trained model on the validation dataset by running:
-```
-python inference.py --dataset-path /path/to/root/of/interaction_dataset_h5_files --models-path results/{Dataset}/{exp_name}/{model_epoch}.pth --batch-size 64
-```
 You can download the weights of the best model by clicking on [this link](https://drive.google.com/file/d/1Uiu67p2FoDJu8p6ymUzBbwCsTgXs-dLb/view?usp=sharing). 
 And you can then run the inference script by executing the following line: 
 ```
