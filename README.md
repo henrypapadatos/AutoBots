@@ -21,7 +21,7 @@ $$\omega_k=\frac{1}{10000^{2 k / d}}$$
 Here is a vizualisation if the sinusoidal positional encoding as presented in [this](https://kazemnejad.com/blog/transformer_architecture_positional_encoding/) blogpost:
 <img src="https://github.com/henrypapadatos/AutoBots/assets/63106608/6ca6d358-64fe-42c5-acdb-6602bd59741c"  width="80%" height="40%">
 
-An alternative is to learn the positional encoding as a model parameter, which could provide the model with more flexibility in representing the relationship between time steps. As learned positional encoding is becoming increasingly popular (LINK?), we decided to test it within the AutoBot architecture.
+An alternative is to learn the positional encoding as a model parameter, which could provide the model with more flexibility in representing the relationship between time steps. As learned positional encoding is becoming increasingly popular, we decided to test it within the AutoBot architecture.
 
 
 ### Multi-layer loss
@@ -101,8 +101,6 @@ Time to create and disk space taken:
 
 
 ### Training an AutoBot model
-All experiments were performed locally on a single GTX 1080Ti. The trained models will be saved in `results/{Dataset}/{exp_name}`.
-Argoverse
 Training AutoBot-Ego on Argoverse while using the raw road segments in the map:
 ```
 python train.py --exp-id test --seed 1 --dataset Argoverse --model-type Autobot-Ego --num-modes 6 --hidden-size 128 --num-encoder-layers 2 --num-decoder-layers 2 --dropout 0.1 --entropy-weight 40.0 --kl-weight 20.0 --use-FDEADE-aux-loss True --use-map-lanes True --tx-hidden-size 384 --batch-size 64 --learning-rate 0.00075 --learning-rate-sched 10 20 30 40 50 --dataset-path /path/to/root/of/argoverse_h5_files
@@ -110,7 +108,12 @@ python train.py --exp-id test --seed 1 --dataset Argoverse --model-type Autobot-
 ### Evaluating an AutoBot model
 For all experiments, you can evaluate the trained model on the validation dataset by running:
 ```
-python evaluate.py --dataset-path /path/to/root/of/interaction_dataset_h5_files --models-path results/{Dataset}/{exp_name}/{model_epoch}.pth --batch-size 64
+python inference.py --dataset-path /path/to/root/of/interaction_dataset_h5_files --models-path results/{Dataset}/{exp_name}/{model_epoch}.pth --batch-size 64
+```
+You can download the weights of the best model by clicking on [this link](https://drive.google.com/file/d/1Uiu67p2FoDJu8p6ymUzBbwCsTgXs-dLb/view?usp=sharing). 
+And you can then run the inference script by executing the following line: 
+```
+python inference.py --dataset-path /path/to/root/of/interaction_dataset_h5_files --models-path best_model.pth --activation_function GELU --batch-size 64
 ```
 
 ## Results
@@ -174,13 +177,13 @@ To test this experiment, use the following argument:
 
 |                       | Val minADE 5 | Val minADE 6 | Val minFDE 6 |
 |-----------------------|--------------|--------------|--------------|
-| num-decoder-layers 4 & MLL & AdamW & L2 regularization 0.025           |              |              |              |
-| num-decoder-layers 4 & MLL & AdamW & L2 regularization 0.015         |              |              |              |
+| num-decoder-layers 4 & MLL & AdamW & L2 regularization 0.025 & GELU          |   0.716           |       **0.6494**      |     **1.104**         |
+| num-decoder-layers 4 & MLL & AdamW & L2 regularization 0.015 & GELU         |      0.7152        |          0.6536    |     1.12         |
 | num-decoder-layers 4 & MLL & AdamW & L2 regularization 0.01 | 0.7252       | 0.6536       | 1.113        |
-| AdamW (num-decoder-layers 2 & AdamW & L2 regularization 0.01)                | 0.7085       | 0.6528       | 1.112        |
+| AdamW (num-decoder-layers 2 & AdamW & L2 regularization 0.01)                | **0.7085**       | 0.6528       | 1.112        |
 | Autobots  (num-decoder-layers 2 & Adam & L2 regularization 0.01)            | 0.7159       | 0.6562       | 1.112        |
 
-ADD STUFF HERE
+We observe that increasing the L2 regularization led to small improvement of the Val minADE 6 and the Val minFDE 6. Hovewer, these amelioration are not consequent. Further work could test the impact of increasing this parameter even more or one could try other regularization techniques. 
 
 
 ## Challenges Faced and Solutions
@@ -199,8 +202,12 @@ Considering the deadline, we shifted our focus and decided to work on modifying 
 ## Conclusion
 
 In conclusion, we have encountered the challenges of setting up a deep learning environment. Ensuring that all the required dependencies and datasets are properly installed on a virtual machine proved to be a complex task, and we now have a deeper appreciation for this process. We are happy to have experimented with various modifications to the Autobot architecture and make incremental improvements. Our best-performing model was trained using the following parameters:
+- Optimizer: AdamW
+- Activation function: GELU
+- L2 regularization: 0.025
+- Type of loss: Multi-Layer loss
+- Number of decoder layers: 4
 
-(NOTE_____________: Include the specific parameters for the best-performing model here.)
 ## Reference
 
 Girgis, R. (2022, January 28). Latent Variable Sequential Set Transformers for Joint Multi-Agent Motion Prediction. OpenReview. https://openreview.net/forum?id=Dup_dDqkZC5
